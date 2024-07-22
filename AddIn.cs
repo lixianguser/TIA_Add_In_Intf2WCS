@@ -108,12 +108,6 @@ namespace TIA_Add_In_Intf2WCS
 #endif
             //获取项目数据
             GetProjectData();
-            //确定PLC的在线状态
-            if (!IsOffline())
-            {
-                throw new Exception(string.Format(CultureInfo.InvariantCulture,
-                            "PLC 在线状态！"));
-            }
 
             try
             {
@@ -315,26 +309,6 @@ namespace TIA_Add_In_Intf2WCS
         }
 
         /// <summary>
-        /// PLC是否为离线模式
-        /// </summary>
-        /// <returns></returns>
-        private bool IsOffline()
-        {
-            bool ret = false;
-
-            foreach (Device device in _projectBase.Devices)
-            {
-                DeviceItem deviceItem = device.DeviceItems[1];
-                if (deviceItem.GetAttribute("Classification") is DeviceItemClassifications.CPU)
-                {
-                    OnlineProvider onlineProvider = deviceItem.GetService<OnlineProvider>();
-                    ret = (onlineProvider.State == OnlineState.Offline);
-                }
-            }
-            return ret;
-        }
-
-        /// <summary>
         /// 获取选中项类型关闭显示项目树按钮
         /// </summary>
         /// <param name="menuSelectionProvider"></param>
@@ -353,7 +327,8 @@ namespace TIA_Add_In_Intf2WCS
             }
             return show ? MenuStatus.Disabled : MenuStatus.Hidden;
         }
-
+        
+#if DEBUG
         /// <summary>
         /// AddIn Tester 插件调试器
         /// </summary>
@@ -404,5 +379,6 @@ namespace TIA_Add_In_Intf2WCS
 
             return selection;
         }
+#endif
     }
 }
