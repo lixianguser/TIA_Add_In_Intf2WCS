@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace TIA_Add_In_Intf2WCS
@@ -184,40 +185,90 @@ namespace TIA_Add_In_Intf2WCS
         /// <returns></returns>
         private static string GetLength(string dataType)
         {
-            string ret;
+            string ret = null;
 
-            switch (dataType)
+            if (dataType.Contains("Array["))
             {
-                case "Bool":
-                    ret = "0.1";
-                    break;
-                case "Byte":
-                case "SInt":
-                case "UInt":
-                    ret = "1";
-                    break;
-                case "Int":
-                case "Uint":
-                case "Word":
-                    ret = "2";
-                    break;
-                case "Array[1..20] of Char":
-                    ret = "20";
-                    break;
-                case "DInt":
-                case "DWord":
-                    ret = "4";
-                    break;
-                case "LWord":
-                    ret = "8";
-                    break;
-                case "String":
-                    ret = "254";
-                    break;
-                default:
-                    ret = "0";
-                    break;
+                //起始数值的正则表达式
+                string patternStart = @"\[(.*?)\.\.";
+                //结束数值的正则表达式
+                string patternEnd = @"\.\.(.*?)\]";
+
+                // 使用正则表达式进行匹配
+                Match matchStart = Regex.Match(dataType, patternStart);
+                Match matchEnd = Regex.Match(dataType, patternEnd);
+                
+                // 提取匹配的组中的值
+                string resultStart = matchStart.Groups[1].Value;
+                // 尝试将字符串转换为整数
+                int.TryParse(resultStart, out int startNumber);
+                
+                // 提取匹配的组中的值
+                string resultEnd = matchEnd.Groups[1].Value;
+                // 尝试将字符串转换为整数
+                int.TryParse(resultEnd, out int endNumber);
+
+                //计算差值
+                int sub = endNumber - startNumber + 1;
+                
+                if (dataType.Contains("Bool"))
+                {
+                    ret = 1 * sub < 8 ? $"0.{1 * sub}" : CalOffset(1 * sub);
+                }
+                if (dataType.Contains("Byte") || dataType.Contains("SInt") || dataType.Contains("UInt") || dataType.Contains("Char"))
+                {
+                    ret = (1 * sub).ToString();
+                }
+                if (dataType.Contains("Int") || dataType.Contains("UInt") || dataType.Contains("Word"))
+                {
+                    ret = (2 * sub).ToString();
+                }
+                if (dataType.Contains("DInt") || dataType.Contains("DWord"))
+                {
+                    ret = (4 * sub).ToString();
+                }
+                if (dataType.Contains("LWord"))
+                {
+                    ret = (8 * sub).ToString();
+                }
+                if (dataType.Contains("String"))
+                {
+                    ret = (254 * sub).ToString();
+                }
             }
+            else
+            {
+                switch (dataType)
+                {
+                    case "Bool":
+                        ret = "0.1";
+                        break;
+                    case "Byte":
+                    case "SInt":
+                    case "UInt":
+                        ret = "1";
+                        break;
+                    case "Int":
+                    case "Uint":
+                    case "Word":
+                        ret = "2";
+                        break;
+                    case "DInt":
+                    case "DWord":
+                        ret = "4";
+                        break;
+                    case "LWord":
+                        ret = "8";
+                        break;
+                    case "String":
+                        ret = "254";
+                        break;
+                    default:
+                        ret = "0";
+                        break;
+                }
+            }
+            
             return ret;
         }
 
